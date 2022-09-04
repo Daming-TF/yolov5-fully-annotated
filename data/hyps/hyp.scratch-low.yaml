@@ -1,0 +1,45 @@
+# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+# Hyperparameters for low-augmentation COCO training from scratch
+# python train.py --batch 64 --cfg yolov5n6.yaml --weights '' --data coco.yaml --img 640 --epochs 300 --linear
+# See tutorials for hyperparameter evolution https://github.com/ultralytics/yolov5#tutorials
+
+lr0: 0.01  # initial learning rate (SGD=1E-2, Adam=1E-3)    # 初始化学习速率
+lrf: 0.01  # final OneCycleLR learning rate (lr0 * lrf)   # 余弦退火参数
+momentum: 0.937  # SGD momentum/Adam beta1    # 学习率动量
+weight_decay: 0.0005  # optimizer weight decay 5e-4   # 权重衰变系数
+warmup_epochs: 3.0  # warmup epochs (fractions ok)    学习率热身epoch
+warmup_momentum: 0.8  # warmup initial momentum   学习率热身初始动量
+warmup_bias_lr: 0.1  # warmup initial bias lr   学习率热身偏执学习率
+box: 0.05  # box loss gain
+cls: 0.5  # cls loss gain
+cls_pw: 1.0  # cls BCELoss positive_weight
+obj: 1.0  # obj loss gain (scale with pixels)
+obj_pw: 1.0  # obj BCELoss positive_weight
+iou_t: 0.20  # IoU training threshold
+anchor_t: 4.0  # anchor-multiple threshold
+# anchors: 3  # anchors per output layer (0 to ignore)
+fl_gamma: 0.0  # focal loss gamma (efficientDet default gamma=1.5)
+# 颜色亮度，色调(Hue)、饱和度
+hsv_h: 0.015  # image HSV-Hue augmentation (fraction)   # 色调
+hsv_s: 0.7  # image HSV-Saturation augmentation (fraction)    # 饱和度
+hsv_v: 0.4  # image HSV-Value augmentation (fraction)   # 明度
+# 图像旋转
+degrees: 0.0  # image rotation (+/- deg)
+# 图像平移
+translate: 0.1  # image translation (+/- fraction)
+# 图像仿射变换的缩放比例
+scale: 0.5  # image scale (+/- gain)
+# 设置裁剪的仿射矩阵系数
+shear: 0.0  # image shear (+/- deg)
+# 透视变换
+perspective: 0.0  # image perspective (+/- fraction), range 0-0.001
+# 上下翻转
+flipud: 0.0  # image flip up-down (probability)
+# 左右翻转
+fliplr: 0.5  # image flip left-right (probability)
+# ？？
+mosaic: 1.0  # image mosaic (probability)
+# mixup系数
+mixup: 0.0  # image mixup (probability)
+# ？？
+copy_paste: 0.0  # segment copy-paste (probability)
