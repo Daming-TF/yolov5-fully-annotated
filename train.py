@@ -105,7 +105,8 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
     # Config
     plots = not evolve and not opt.noplots  # create plots
     cuda = device.type != 'cpu'
-    # 设置一系列的随机数种子
+    # 设置一系列的随机数种子，主要用于网络训练参数初始化
+    # ？？但为什么需要多个种子的设置？？
     init_seeds(opt.seed + 1 + RANK, deterministic=True)
     # 装饰器——让每个进程（每个GPU）等待master节点读取训练数据信息
     with torch_distributed_zero_first(LOCAL_RANK):
@@ -118,7 +119,7 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
     is_coco = isinstance(val_path, str) and val_path.endswith('coco/val2017.txt')  # COCO dataset
 
     # Model
-    check_suffix(weights, '.pt')  # check weights
+    check_suffix(weights, '.pt')  # check weights 检查模型文件的文件后缀是否支持
     pretrained = weights.endswith('.pt')
     if pretrained:
         # torch_distributed_zero_first(RANK): 用于同步不同进程对数据读取的上下文管理器

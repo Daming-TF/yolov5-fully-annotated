@@ -213,10 +213,12 @@ def init_seeds(seed=0, deterministic=False):
 
     random.seed(seed)
     np.random.seed(seed)
-    torch.manual_seed(seed)
+    torch.manual_seed(seed)     # 为CPU设置种子
     cudnn.benchmark, cudnn.deterministic = (False, True) if seed == 0 else (True, False)
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)  # for Multi-GPU, exception safe
+    # 需要注意的是当只调用torch.cuda.manual_seed()一次时并不能生成相同的随机数序列。
+    # 如果想要得到相同的随机数序列就需要每次产生随机数的时候都要调用一下torch.cuda.manual_seed()。
+    torch.cuda.manual_seed(seed)        # 为GPU设置种子
+    torch.cuda.manual_seed_all(seed)  # for Multi-GPU, exception safe       # 为所有GPU设置种子
 
 
 def intersect_dicts(da, db, exclude=()):
