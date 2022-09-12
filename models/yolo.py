@@ -129,7 +129,7 @@ class Model(nn.Module):
         'width_multiple'=0.5,
         'anchors'=[[...],[...],[...]],      # 列表每个元素都是长度为6的列表，即3个anchor
         ‘backone’=[[...],[...],[...],......],       # 列表每个元素都是长度为4的列表，例如：[-1, 1, ‘Conv’, [64, 6, 2, 2]]
-        'head'=[[...],[...],[...],......],      # 和backone相似表示网络结构
+        'head'=[[...],[...],[...],......],      # 和backone相似，表示网络结构
         ‘ch’=3
         }
         '''
@@ -167,7 +167,7 @@ class Model(nn.Module):
         if isinstance(m, Detect):
             s = 256  # 2x min stride
             m.inplace = self.inplace
-            # 计算三个feature map下采样的倍率  [8, 16, 32]
+            # 通过对一个batch-size大小为256*256*3的张量前向推导得到网络的输入，从而计算网络下采样的倍率  [8, 16, 32]
             m.stride = torch.tensor([s / x.shape[-2] for x in self.forward(torch.zeros(1, ch, s, s))])  # forward
             # 检查anchor{tensor-3*3}顺序与stride=[8, 16, 32]顺序是否一致
             check_anchor_order(m)  # must be in pixel-space (not grid-space)
@@ -219,7 +219,7 @@ class Model(nn.Module):
         [1, 3, 80, 80, 25] [1, 3, 40, 40, 25] [1, 3, 20, 20, 25]
         """
 
-        # y: 存放着self.save=True的每一层的输出，因为后面的层结构concat等操作要用到
+        # y: 存放着self.save=True的每一层的输出张量，因为后面的层结构concat等多通道输入操作要用到
         # dt: 在profile中做性能评估时使用
         y, dt = [], []  # outputs
         for m in self.model:
@@ -236,7 +236,7 @@ class Model(nn.Module):
             x = m(x)  # run 正向推理
             # 存放着self.save的每一层的输出，因为后面需要用来作concat等操作要用到  不在self.save层的输出就为None
             y.append(x if m.i in self.save else None)  # save output
-            # 特征可视化——保存该层网络输出的特征图
+            # 特征可视化——保存该层网络输出的特征图，默认为False不保存
             if visualize:
                 feature_visualization(x, m.type, m.i, save_dir=visualize)
         return x
@@ -379,8 +379,9 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
             with contextlib.suppress(NameError):
                 args[j] = eval(a) if isinstance(a, str) else a  # eval strings
         # round(x, n)函数：返回保留浮点数x的n位小数，最后一位是四舍五入
-        n = n_ = max(round(n * gd), 1) if n > 1 else n  # depth gain
-        # 下面这几个判断主要是为了获得输入通道
+        n = n_ = max(round(n * gd), 1) if n > 1 else n  # depth gain 网络模块堆叠数量
+
+        # 下面这几个判断主要是为了根据不同的网络模块获得输入通道
         if m in (Conv, GhostConv, Bottleneck, GhostBottleneck, SPP, SPPF, DWConv, MixConv2d, Focus, CrossConv,
                  BottleneckCSP, C3, C3TR, C3SPP, C3Ghost, nn.ConvTranspose2d, DWConvTranspose2d, C3x):
             c1, c2 = ch[f], args[0]     # c1:3 输入通道 c2:64 输出通道
@@ -407,10 +408,11 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
         else:
             c2 = ch[f]
         # nn.Sequential()函数使用序贯模型把不同网络层串联起来
-        m_ = nn.Sequential(*(m(*args) for _ in range(n))) if n > 1 else m(*args)  # module
+        m_ = nn.Sequential(*(m(*args) for _ in range(n))) if n > 1 else m(*args)  # module 一层网络结构设置
         t = str(m)[8:-2].replace('__main__.', '')  # module type
         np = sum(x.numel() for x in m_.parameters())  # number params       # .numel()：返回数组中元素的个数
-        m_.i, m_.f, m_.type, m_.np = i, f, t, np  # attach index-网络层索引, 'from' index, type-网络模块类型, number params-网络参数
+        # attach index-当前网络层索引, 'from' 当前网络输入所对应的网路输出层索引, type-网络模块类型, number params-网络参数
+        m_.i, m_.f, m_.type, m_.np = i, f, t, np
         LOGGER.info(f'{i:>3}{str(f):>18}{n_:>3}{np:10.0f}  {t:<40}{str(args):<30}')  # print
         save.extend(x % i for x in ([f] if isinstance(f, int) else f) if x != -1)  # append to savelist
         layers.append(m_)
