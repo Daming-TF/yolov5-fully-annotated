@@ -577,6 +577,7 @@ def main(opt, callbacks=Callbacks()):
         if opt.name == 'cfg':
             # path.stem 从路径中获取没有扩展名的文件名 例如：yolov5s
             opt.name = Path(opt.cfg).stem  # use model.yaml as name
+        # increment_path函数主要的用法是生成新的模型输出保存文件路径
         opt.save_dir = str(increment_path(Path(opt.project) / opt.name, exist_ok=opt.exist_ok))
 
     '''
